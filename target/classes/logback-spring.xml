@@ -1,0 +1,53 @@
+<configuration>
+
+	<springProperty scope="context" name="graylogUri" source="graylog.uri"/>
+	
+	<appender name="CONSOLE" class="ch.qos.logback.core.ConsoleAppender">
+    <layout class="ch.qos.logback.classic.PatternLayout">
+        <Pattern>
+            %d{dd-MM-yyyy HH:mm:ss.SSS} %highlight(%-5level) [%blue(%t)] %yellow(%logger{45}) : %msg%n%throwable
+        </Pattern>
+    </layout>
+    </appender>
+    
+    <appender name="GELF" class="de.siegmar.logbackgelf.GelfHttpAppender">
+        <uri>${graylogUri}</uri>
+        <insecure>false</insecure>
+        <connectTimeout>15000</connectTimeout>
+        <requestTimeout>5000</requestTimeout>
+        <maxRetries>2</maxRetries>
+        <retryDelay>3000</retryDelay>
+        <compressionMethod>GZIP</compressionMethod>
+        <encoder class="de.siegmar.logbackgelf.GelfEncoder">
+            <originHost>localhost</originHost>
+            <includeRawMessage>false</includeRawMessage>
+            <includeKeyValues>true</includeKeyValues>
+            <includeMarker>false</includeMarker>
+            <includeMdcData>true</includeMdcData>
+            <includeCallerData>false</includeCallerData>
+            <includeRootCauseData>true</includeRootCauseData>
+            <includeLevelName>true</includeLevelName>
+            <shortMessageLayout class="ch.qos.logback.classic.PatternLayout">
+                <pattern>%m%nopex</pattern>
+            </shortMessageLayout>
+            <fullMessageLayout class="ch.qos.logback.classic.PatternLayout">
+                <pattern>%m%n</pattern>
+            </fullMessageLayout>
+            <numbersAsString>false</numbersAsString>
+            <staticField>app_name:backend</staticField>
+            <staticField>os_arch:${os.arch}</staticField>
+            <staticField>os_name:${os.name}</staticField>
+            <staticField>os_version:${os.version}</staticField>
+        </encoder>
+    </appender>
+
+    <root level="debug">
+        <appender-ref ref="ASYNC GELF" />
+    </root>
+    
+    <appender name="ASYNC GELF" class="ch.qos.logback.classic.AsyncAppender">
+        <appender-ref ref="GELF" />
+        <neverBlock>true</neverBlock>
+    </appender>
+	
+</configuration>
